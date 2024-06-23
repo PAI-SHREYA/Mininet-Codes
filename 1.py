@@ -1,13 +1,14 @@
 from mininet.log import setLogLevel, info
 from mn_wifi.cli import CLI
 from mn_wifi.net import Mininet_wifi
-from mn_wifi.node import OVSKernelSwitch, Station
+from mn_wifi.node import Station, AP, Controller
+from mn_wifi.link import wmediumd, mesh
 
 def create_custom_topology():
     "Create a custom Mininet-WiFi network."
 
     # Create Mininet-WiFi network
-    net = Mininet_wifi(switch=OVSKernelSwitch, station=Station)
+    net = Mininet_wifi(controller=Controller, link=wmediumd, accessPoint=AP, station=Station)
 
     # Define switches
     s1 = net.addSwitch('s1')
