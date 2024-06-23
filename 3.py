@@ -39,6 +39,6 @@ def setup_network():
     info("* Stopping network\n")
     net.stop()
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     setLogLevel('info')
     setup_network()
