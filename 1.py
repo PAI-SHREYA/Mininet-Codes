@@ -3,6 +3,7 @@ from mininet.net import Mininet
 from mininet.node import OVSController
 from mininet.cli import CLI
 from mininet.link import TCLink
+from mininet.log import setLogLevel, info
 
 class CustomTopo(Topo):
     def build(self):
@@ -41,10 +42,15 @@ def run():
     print("Testing network connectivity")
     net.pingAll()
 
+    # Print IP addresses of all hosts for verification
+    for host in net.hosts:
+        print(f'{host.name} has IP address {host.IP()}')
+
     # Start CLI
     CLI(net)
 
     net.stop()
 
 if __name__ == '__main__':
+    setLogLevel('info')
     run()
