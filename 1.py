@@ -1,66 +1,54 @@
+#!/usr/bin/python
+import sys
 from mininet.log import setLogLevel, info
 from mn_wifi.cli import CLI
 from mn_wifi.net import Mininet_wifi
-from mn_wifi.node import Station, AP, Controller
-from mn_wifi.link import wmediumd, mesh
+from mininet.node import Controller
+import os
 
-def create_custom_topology():
-    "Create a custom Mininet-WiFi network."
+def topology():
+    "Create a network."
+    net = Mininet_wifi(controller=Controller)
 
-    # Create Mininet-WiFi network
-    net = Mininet_wifi(controller=Controller, link=wmediumd, accessPoint=AP, station=Station)
+    info("*** Creating nodes\n")
+    ap1 = net.addAccessPoint('ap1', ssid='ssid-ap1', mode='g', channel='1', position='10,30,0')
+    ap2 = net.addAccessPoint('ap2', ssid='ssid-ap2', mode='g', channel='6', position='50,30,0')
+    ap3 = net.addAccessPoint('ap3', ssid='ssid-ap3', mode='g', channel='11', position='90,30,0')
+    sta1 = net.addStation('sta1', ip='10.0.0.1', position='15,30,0')
+    sta2 = net.addStation('sta2', ip='10.0.0.2', position='20,40,0')
+    sta3 = net.addStation('sta3', ip='10.0.0.3', position='25,50,0')
+    sta4 = net.addStation('sta4', ip='10.0.0.4', position='30,60,0')
+    sta5 = net.addStation('sta5', ip='10.0.0.5', position='35,70,0')
+    sta6 = net.addStation('sta6', ip='10.0.0.6', position='40,80,0')
 
-    # Define switches
-    s1 = net.addSwitch('s1')
-    s2 = net.addSwitch('s2')
-    s3 = net.addSwitch('s3')
+    c0 = net.addController('c0')
 
-    # Define hosts
-    h1 = net.addHost('h1')
-    h2 = net.addHost('h2')
-    h3 = net.addHost('h3')
-    h4 = net.addHost('h4')
-    h5 = net.addHost('h5')
-    h6 = net.addHost('h6')
+    info("*** Configuring wifi nodes\n")
+    net.configureWifiNodes()
 
-    # Connect hosts to switches
-    net.addLink(h1, s1)
-    net.addLink(h2, s1)
-    net.addLink(h3, s2)
-    net.addLink(h4, s2)
-    net.addLink(h5, s3)
-    net.addLink(h6, s3)
+    info("*** Creating links\n")
+    net.addLink(ap1, ap2)
+    net.addLink(ap2, ap3)
 
-    # Connect switches to create redundant paths
-    net.addLink(s1, s2)
-    net.addLink(s2, s3)
-    net.addLink(s3, s1)
+    info("*** Starting network\n")
+    net.build()
+    c0.start()
+    ap1.start([c0])
+    ap2.start([c0])
+    ap3.start([c0])
 
-    return net
+    info("*** Applying OpenFlow rules\n")
+    # Example OpenFlow rule to forward packets destined for 10.0.0.3 to port 2
+    os.system('ovs-ofctl add-flow ap1 "ip,nw_dst=10.0.0.3,actions=output:2"')
+    os.system('ovs-ofctl add-flow ap2 "ip,nw_dst=10.0.0.3,actions=output:2"')
+    os.system('ovs-ofctl add-flow ap3 "ip,nw_dst=10.0.0.3,actions=output:2"')
 
-def test_connectivity(net):
-    "Test connectivity between all hosts."
-
-    net.pingAll()
-
-def main():
-    "Main function to create and test the network."
-
-    # Create custom Mininet-WiFi network
-    net = create_custom_topology()
-
-    # Start the network
-    net.start()
-
-    # Test connectivity
-    test_connectivity(net)
-
-    # Start the Mininet-WiFi CLI
+    info("*** Running CLI\n")
     CLI(net)
 
-    # Stop the network
+    info("*** Stopping network\n")
     net.stop()
 
 if __name__ == '__main__':
     setLogLevel('info')
-    main()
+    topology()
